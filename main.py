@@ -5,42 +5,44 @@ from pydantic import BaseModel
 from aiogram import Bot, Dispatcher
 from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 from aiogram.filters import Command
-from supabase import create_client, Client
+from supabase import create_client
 
-# НАСТРОЙКИ (Заполняются из переменных окружения на Render)
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 WEBAPP_URL = os.getenv("WEBAPP_URL", "https://chipper-quokka-c4dade.netlify.app/")
+APP_URL = os.getenv("APP_URL", "https://yuranya-bot-backend.onrender.com")
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+dp = Dispatcher()
+
+@dp.message(Command("start"))
+async def cmd_start(message: Message):
+    supabase.table("users").upsert(
+        {"id": message.from_user.id, "username": message.from_user.username, "balance": 0},
+        on_conflict="id"
+    ).execute()
+    
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🚀 Открыть приложение", web_app=WebAppInfo(url=WEBAPP_URL))]
+    ])
+    await message.answer(
+        "👋 Привет! Добро пожаловать в биржу взаимной рекламы.\n\n"
+        "📺 Смотри рекламы по 1 минуте, получай баллы и публикуй свои ссылки!\n"
+        "🔥 10 баллов = 1 бесплатная публикация.",
+        reply_markup=keyboard
+    )
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     bot = Bot(token=BOT_TOKEN)
     app.state.bot = bot
-    app.state.dp = Dispatcher()
+    app.state.dp = dp
     
-    @app.state.dp.message(Command("start"))
-    async def cmd_start(message: Message):
-        supabase.table("users").upsert(
-            {"id": message.from_user.id, "username": message.from_user.username, "balance": 0}, 
-            on_conflict="id"
-        ).execute()
-        
-        keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="🚀 Открыть приложение", web_app=WebAppInfo(url=WEBAPP_URL))]
-        ])
-        await message.answer(
-            "👋 Привет! Добро пожаловать в биржу взаимной рекламы.\n\n"
-            "📺 Смотри рекламы по 1 минуте, получай баллы и публикуй свои ссылки!\n"
-            "🔥 10 баллов = 1 бесплатная публикация.",
-            reply_markup=keyboard
-        )
-
-    webhook_url = os.getenv("APP_URL") + "/webhook"
+    webhook_url = APP_URL + "/webhook"
     await bot.set_webhook(webhook_url)
-    print(f"✅ Бот запущен! Webhook установлен на: {webhook_url}")
+    print(f"✅ Бот запущен! Webhook: {webhook_url}")
     
     yield
     
@@ -54,6 +56,10 @@ async def webhook(request: Request):
     update = await request.json()
     await app.state.dp.feed_webhook_update(app.state.bot, update)
     return {"ok": True}
+
+@app.get("/")
+async def root():
+    return {"status": "ok", "message": "Бот работает!"}
 
 class WatchRequest(BaseModel):
     user_id: int

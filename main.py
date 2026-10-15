@@ -7,11 +7,12 @@ from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, W
 from aiogram.filters import Command
 from supabase import create_client
 
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
-WEBAPP_URL = os.getenv("WEBAPP_URL", "https://chipper-quokka-c4dade.netlify.app/")
-APP_URL = os.getenv("APP_URL", "https://yuranya-bot-backend.onrender.com")
+# 🔑 КЛЮЧИ ВСТАВЛЕНЫ ПРЯМО В КОД
+BOT_TOKEN = "8830496082:AAGeXrjxOGOUroLWaY5P6wnfwg2h3oKCB5c"
+SUPABASE_URL = "https://tiymbzkyvuegtrcsscmc.supabase.co"
+SUPABASE_KEY = "sb_publishable_tR49bnSxYvhDAWtPlCWCng_4BeyADd_"
+WEBAPP_URL = "https://chipper-quokka-c4dade.netlify.app/"
+APP_URL = "https://yuranya-bot-backend.onrender.com"
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
@@ -28,9 +29,9 @@ async def cmd_start(message: Message):
         [InlineKeyboardButton(text="🚀 Открыть приложение", web_app=WebAppInfo(url=WEBAPP_URL))]
     ])
     await message.answer(
-        "👋 Привет! Добро пожаловать в биржу взаимной рекламы.\n\n"
+        " Привет! Добро пожаловать в биржу взаимной рекламы.\n\n"
         "📺 Смотри рекламы по 1 минуте, получай баллы и публикуй свои ссылки!\n"
-        "🔥 10 баллов = 1 бесплатная публикация.",
+        " 10 баллов = 1 бесплатная публикация.",
         reply_markup=keyboard
     )
 
